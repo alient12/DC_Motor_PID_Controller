@@ -8,6 +8,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
+from PyQt5.QtSvg import QSvgWidget
 import numpy as np
 from time import sleep
 
@@ -21,6 +22,7 @@ import time
 import tfest
 from multiprocessing import Process
 from multiprocessing import Manager
+from io import BytesIO
 
 libusb1_backend = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
 
@@ -49,11 +51,12 @@ stm_online = True
 stm32_detected = False
 stupid_counter = 0; stupid_flag = True
 PH_mode = 0
+tex_color = "b"
 
 # sampling and estimation vars
 data_input = []; data_output = []; sampling_cnt = 0
 sample_start_T = 0; sample_stop_T = 0
-SAMPLE_NUMS = 500; IMPULSE_WIDTH = 10
+SAMPLE_NUMS = 50; IMPULSE_WIDTH = 10
 npoles = 2; nzeros = 1
 
 try:
@@ -107,6 +110,9 @@ class MatplotlibWindow(QMainWindow, Form):
         self.pos_ledit.setText(str(0));self.speed_ledit.setText(str(0))
         self.npole_ledit.setText(str(npoles));self.nzero_ledit.setText(str(nzeros))
 
+        self.svg = QSvgWidget(self)
+        self.svg.setGeometry(800, 675, self.svg.width() * 2, self.svg.height() * 1.5)
+
         line1_color = "b"
         line2_color = "r"
         ax_num_color = "k"
@@ -117,6 +123,7 @@ class MatplotlibWindow(QMainWindow, Form):
             line2_color = "#ffa31a"
             ax_num_color = "#ffa31a"
             ax_line_color = "#292929"
+            global tex_color; tex_color = "#ffa31a"
         
         # global stm32_detected; stm32_detected = True
         if stm32_detected:
@@ -152,9 +159,10 @@ class MatplotlibWindow(QMainWindow, Form):
 
         self.thread_estimate = EstimateThread(self)
         self.thread_estimate.update_trigger.connect(self.update_plot)
+        self.thread_estimate.update_svg.connect(self.update_svg)
     
     def update_vars(self, num):
-        global kpp, kip, kdp, kps, kis, kds, dp, ds, man_out, npoles, nzeros, mode, T0, T, freq, setpoint_mode, setpoint_x, data_output, data_input
+        global kpp, kip, kdp, kps, kis, kds, dp, ds, man_out, npoles, nzeros, mode, T0, T, freq, setpoint_mode, setpoint_x, data_output, data_input, sampling_cnt
         if not isinstance(num, bool):
             try:
                 int(num)
@@ -232,18 +240,19 @@ class MatplotlibWindow(QMainWindow, Form):
             self.min_label.setText("0.01 Hz");self.max_label.setText("1 Hz")
         elif self.sender() == self.step_button:
             setpoint_mode = "step"
-            data_input, data_output = [], []
+            data_input, data_output = [], []; sampling_cnt = 0
             dev.set_mem32(memory_dict["auto_mode"], 0)
         elif self.sender() == self.impulse_button:
             setpoint_mode = "impulse"
-            data_input, data_output = [], []
+            data_input, data_output = [], []; sampling_cnt = 0
             dev.set_mem32(memory_dict["auto_mode"], 0)
         elif self.sender() == self.estimate_button:
-            if data_output != []:
+            if data_output != [] and (setpoint_mode != "step" and setpoint_mode != "impulse"):
                 self.message_label.setText("Estimating Transfer Function...")
                 self.thread_estimate.start()
             else:
-                self.message_label.setText("Sampling First!")
+                if data_output == []:
+                    self.message_label.setText("Sampling First!")
 
     def update(self, x, v):
         self.posval_label.setText(str(x))
@@ -266,6 +275,10 @@ class MatplotlibWindow(QMainWindow, Form):
         self.canvas.draw()
         if message:
             self.message_label.setText(message)
+    
+    def update_svg(self, svg):   
+        self.svg.load(svg)
+        self.svg.show()
     
     def closeEvent(self, event):
         global stm_online
@@ -358,42 +371,67 @@ class MicroThread(QtCore.QThread):
 
 class EstimateThread(QtCore.QThread):
     update_trigger = QtCore.pyqtSignal(str)
+    update_svg = QtCore.pyqtSignal(bytes)
 
     def __init__(self, window):
         QtCore.QThread.__init__(self, parent=window)
         self.window = window
 
     def run(self):
-        global data_input, data_output, npoles, nzeros, return_dict
+        global data_input, data_output, npoles, nzeros, return_dict, tex_color
         input_arr = np.array(data_input)
         output_arr = np.array(data_output)
         t_tot = sample_stop_T - sample_start_T
-        proc = Process(target=estimate_tf, args=(input_arr, output_arr, t_tot, return_dict))
+        proc = Process(target=estimate_tf, args=(input_arr, output_arr, t_tot, return_dict, tex_color))
         return_dict["message"] = ""
         proc.start()
         proc.join()
         self.update_trigger.emit(return_dict["message"])
+        self.update_svg.emit(return_dict["svg"])
         
-def estimate_tf(input_arr, output_arr, t_tot, return_dict):
+def estimate_tf(input_arr, output_arr, t_tot, return_dict, tex_color):
     te = tfest.tfest(input_arr, output_arr)
     te.estimate(nzeros, npoles, time=t_tot)
     tf = te.get_transfer_function()
     num = tf.num.tolist()
     den = tf.den.tolist()
-    message = ""
+    formula = ""
+    formula_tex = r"\frac{"
     for i, c in enumerate(num):
         if i==0:
-            message += f"{c:.2f}"
+            formula += f"{c}"
+            formula_tex += f"{c:.2f}"
         else:
-            message += f"+{c:.2f}S^{i}"
-    message += "\n"+ npoles*20*"-" +"\n"
+            if c>0:
+                formula += f"+{c}S^{i}"
+                formula_tex += f"+{c:.2f}s" + ("" if i==1 else "^{" + str(i) + "}")
+            elif c<0:
+                formula += f"{c}S^{i}"
+                formula_tex += f"{c:.2f}s" + ("" if i==1 else "^{" + str(i) + "}")
+    formula += "\n"+ npoles*20*"-" +"\n"
+    formula_tex += "}{"
     for i, c in enumerate(den):
         if i==0:
-            message += f"{c:.2f}"
-        else:
-            message += f"+{c:.2f}S^{i}"
-    return_dict["message"] = message
-    print("TF:\n", message)
+            formula += f"{c}"
+            formula_tex += f"{c:.2f}"
+        else: 
+            if c>0:
+                formula += f"+{c}S^{i}"
+                formula_tex += f"+{c:.2f}s" + ("" if i==1 else "^{" + str(i) + "}")
+            elif c<0:
+                formula += f"{c}S^{i}"
+                formula_tex += f"{c:.2f}s" + ("" if i==1 else "^{" + str(i) + "}")
+    formula_tex += "}"
+    matplotlib.pyplot.rc('mathtext', fontset='cm')
+    fig = Figure(figsize=(0.01, 0.01))
+    fontsize=12;dpi=300
+    fig.text(0, 0, r'${}$'.format(formula_tex), fontsize=fontsize, color=tex_color)
+    output = BytesIO()
+    fig.savefig(output, dpi=dpi, transparent=True, format='svg', bbox_inches='tight', pad_inches=0.0, frameon=False)
+    output.seek(0)
+    return_dict["message"] = "Transfer Function:"
+    return_dict["svg"] = output.read()
+    print("TF:\n", formula)
 
 
 if __name__ == "__main__":
