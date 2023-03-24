@@ -1,0 +1,862 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1029</width>
+    <height>825</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Motor Controller</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="step_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>380</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Step Input (No PID)</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="matplotlib_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>340</y>
+      <width>761</width>
+      <height>451</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QSlider" name="vertical_slider">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>44</y>
+      <width>22</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <number>100</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pos_button">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>250</y>
+      <width>201</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Auto Position</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="feedback_box">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>261</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Sensors &amp; Setpoints</string>
+    </property>
+    <widget class="QLabel" name="pos_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Position:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="speed_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Speed:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="pos_ledit">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>110</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="setpos_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>110</y>
+       <width>141</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Setpoint Pos:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="setspeed_label">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>151</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Setpoint Speed:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="speed_ledit">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>150</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="posval_label">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>30</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>NULL</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="speedval_label">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>70</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>NULL</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="pid_pos_box">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>20</y>
+      <width>231</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Position Controller PID</string>
+    </property>
+    <widget class="QLabel" name="kpp_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Kp:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kpp_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>30</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kip_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>70</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="kip_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Ki:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="kdp_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>110</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Kd:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kdp_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>110</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="dp_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>150</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="dp_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>150</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Devider:</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="pid_speed_box">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>20</y>
+      <width>231</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Speed Controller PID</string>
+    </property>
+    <widget class="QLabel" name="kps_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Kp:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kps_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>30</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kis_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>70</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="kis_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Ki:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="kds_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>110</y>
+       <width>55</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Kd:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="kds_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>110</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="ds_ledit">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>150</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+    </widget>
+    <widget class="QLabel" name="ds_label">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>150</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Devider:</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="speed_button">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>250</y>
+      <width>201</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Auto Speed</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="man_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>250</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Manual Volt</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="mode_label">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>250</y>
+      <width>201</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Mode: Position Control</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="impulse_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>420</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Impulse Input (No PID)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="pole_label">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>520</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Number of poles:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="npole_ledit">
+    <property name="geometry">
+     <rect>
+      <x>960</x>
+      <y>520</y>
+      <width>41</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="nzero_ledit">
+    <property name="geometry">
+     <rect>
+      <x>960</x>
+      <y>560</y>
+      <width>41</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+   </widget>
+   <widget class="QLabel" name="zero_label">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>560</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Number of zeros:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="man_num_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>290</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Manual Setpoint Num</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="man_scroll_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>330</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Manual Setpoint Scroll</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="min_label">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>204</y>
+      <width>55</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0 V</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="max_label">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>44</y>
+      <width>55</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>6 V</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="sine_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>460</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Sine Input</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="estimate_button">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>600</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Estimate TF</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="status_label">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>280</y>
+      <width>231</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Error: STM32 Not Detected!</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>729</y>
+      <width>231</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>© 2023 All rights reserved by @alient12
+Industrial Control Project AUT</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="message_label">
+    <property name="geometry">
+     <rect>
+      <x>770</x>
+      <y>640</y>
+      <width>261</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1029</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

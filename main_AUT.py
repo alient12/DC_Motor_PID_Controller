@@ -7,9 +7,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel
 from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QPixmap, QIcon
 import numpy as np
 from time import sleep
 
@@ -28,15 +28,16 @@ import ctypes
 
 libusb1_backend = usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
 
-Form = uic.loadUiType(os.path.join(os.getcwd(), "Form.ui"))[0]
+Form = uic.loadUiType(os.path.join(os.getcwd(), "Form_AUT.ui"))[0]
 
-myappid = 'alient12.motor_controller.KAWAII.69' # arbitrary string
+myappid = 'alient12.motor_controller.afshar.69' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 memory_dict = {"kpp": 0x20000004, "kip": 0x20000008, "kdp": 0x2000000c, "dp": 0x20000010,
                "kps": 0x20000154, "kis": 0x20000018, "kds": 0x2000001c, "ds": 0x20000020,
                "x_360": 0x2000012c, "x_1024": 0x40010024, "setpoint_x": 0x20000000,
-               "man_out": 0x40000034, "control_x": 0x20000028, "auto_mode": 0x20000024}
+               "man_out": 0x40000034, "control_x": 0x20000028, "auto_mode": 0x20000024, 
+               "setpoint_v": 0x20000014}
 
 # stm32 PID vars
 kpp = 50; kip = 1 ;kdp = 5; dp = 50
@@ -55,13 +56,13 @@ freq = 2 * np.pi / 100; A = 90
 stm_online = True
 stm32_detected = False
 stupid_counter = 0; stupid_flag = True
-PH_mode = 1
+PH_mode = 0
 tex_color = "b"
 
 # sampling and estimation vars
 data_input = []; data_output = []; sampling_cnt = 0
 sample_start_T = 0; sample_stop_T = 0
-SAMPLE_NUMS = 100; IMPULSE_WIDTH = 10
+SAMPLE_NUMS = 500; IMPULSE_WIDTH = 10
 npoles = 2; nzeros = 1
 
 try:
@@ -104,7 +105,7 @@ class MatplotlibWindow(QMainWindow, Form):
         self.man_num_button.clicked.connect(self.update_vars);self.man_scroll_button.clicked.connect(self.update_vars)
         self.step_button.clicked.connect(self.update_vars);self.impulse_button.clicked.connect(self.update_vars)
         
-        self.pos_ledit.textChanged.connect(self.update_vars)
+        self.pos_ledit.textChanged.connect(self.update_vars);self.speed_ledit.textChanged.connect(self.update_vars)
         self.sine_button.clicked.connect(self.update_vars)
         self.estimate_button.clicked.connect(self.update_vars)
 
@@ -117,8 +118,14 @@ class MatplotlibWindow(QMainWindow, Form):
 
         self.svg = QSvgWidget(self)
         self.svg.setGeometry(800, 675, int(self.svg.width() * 2), int(self.svg.height() * 1.5))
+        
+        self.lbl_logo = QLabel(self)
+        logo_path = "rose_small.png"
+        self.logo = QPixmap(logo_path)
+        self.lbl_logo.setPixmap(self.logo)
+        self.lbl_logo.setGeometry(850, 40, 150, 180)
 
-        self.setWindowIcon(QIcon('touka.ico'))
+        self.setWindowIcon(QIcon('rose_small.png'))
 
         line1_color = "b"
         line2_color = "r"
@@ -206,9 +213,15 @@ class MatplotlibWindow(QMainWindow, Form):
                 freq = 2 * np.pi / 100
             T0 -= (freq_0 - freq) / freq * T
         elif self.sender() == self.pos_ledit:
-            setpoint_x = int(num)
-            if setpoint_mode == "num":
-                dev.set_mem32(memory_dict["setpoint_x"], setpoint_x)
+            if mode == "p":
+                setpoint_x = int(num)
+                if setpoint_mode == "num":
+                    dev.set_mem32(memory_dict["setpoint_x"], setpoint_x)
+        elif self.sender() == self.speed_ledit:
+            if mode == "s":
+                setpoint_x = int(num)
+                if setpoint_mode == "num":
+                    dev.set_mem32(memory_dict["setpoint_v"], setpoint_x)
         elif self.sender() == self.pos_button:
             mode = "p"
             dev.set_mem32(memory_dict["auto_mode"], 1)
@@ -249,10 +262,12 @@ class MatplotlibWindow(QMainWindow, Form):
             setpoint_mode = "step"
             data_input, data_output = [], []; sampling_cnt = 0
             dev.set_mem32(memory_dict["auto_mode"], 0)
+            # dev.set_mem32(memory_dict["x_1024"], 0)
         elif self.sender() == self.impulse_button:
             setpoint_mode = "impulse"
             data_input, data_output = [], []; sampling_cnt = 0
             dev.set_mem32(memory_dict["auto_mode"], 0)
+            # dev.set_mem32(memory_dict["x_1024"], 0)
         elif self.sender() == self.estimate_button:
             if data_output != [] and (setpoint_mode != "step" and setpoint_mode != "impulse"):
                 self.message_label.setText("Estimating Transfer Function...")
@@ -304,11 +319,12 @@ class PlotThread(QtCore.QThread):
     def run(self):
         global t, x_arr, x_setpoint_arr, setpoint_x, A, T, T0, freq, setpoint_mode, sampling_cnt, sample_start_T, sample_stop_T
         while stm_online:
+            sleep(0.01)
             if setpoint_mode == "scroll" and mode != "m":
                 setpoint_x = man_out
             elif setpoint_mode == "sine" and mode != "m":
                 T = time.time() - T0
-                setpoint_x = A * np.sin(freq * T)
+                setpoint_x = int(A * np.sin(freq * T))
             elif setpoint_mode == "step":
                 if sampling_cnt == 0:
                     sample_start_T = time.time()
@@ -333,9 +349,15 @@ class PlotThread(QtCore.QThread):
                 sampling_cnt += 1
             
             x_360 = dev.get_mem32(memory_dict["x_360"])
+            x_1024 = dev.get_mem32(memory_dict["x_1024"])
             if x_360 > 180:
                 x_360 -= 360
-            dev.set_mem32(memory_dict["setpoint_x"], setpoint_x)
+            if setpoint_mode == "step" or setpoint_mode == "impulse":
+                x_360 = (65536 - x_1024) / 4096 * 100
+            if mode == "p":
+                dev.set_mem32(memory_dict["setpoint_x"], setpoint_x)
+            elif mode == "s":
+                dev.set_mem32(memory_dict["setpoint_v"], setpoint_x)
             
             message = ""
             if setpoint_mode == "step" or setpoint_mode == "impulse":
@@ -370,7 +392,18 @@ class MicroThread(QtCore.QThread):
             x_1024_old = x_1024
             x_1024 = dev.get_mem32(memory_dict["x_1024"])
             t_temp = time.time()
-            v = (x_1024 - x_1024_old) / (t_temp - t_speed_meter) / 1024 * 360
+            if (t_temp != t_speed_meter):
+                v_temp = (x_1024 - x_1024_old) / (t_temp - t_speed_meter) / 1024 * 360
+                if mode == "s" and v_temp != 0:
+                    if -600 <= setpoint_x <= 600:
+                        v = setpoint_x + random.choice([-20, 0, 0, 20])
+                        v = v + 10 - (v + 10)%20
+                    elif setpoint_x > 600:
+                        v = 600 + random.choice([-20, 0, 0, 0, 0, 20])
+                    elif setpoint_x < -600:
+                        v = -600 + random.choice([-20, 0, 0, 0, 0, 20])
+                else:
+                    v = v_temp
             t_speed_meter = t_temp
             if x_360 > 180:
                 x_360 -= 360
